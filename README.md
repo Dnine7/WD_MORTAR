@@ -10,6 +10,8 @@
 dist\WardogsMortar.exe
 ```
 
+[从 GitHub Releases 下载最新版 WardogsMortar.exe](https://github.com/Dnine7/WD_MORTAR/releases/latest/download/WardogsMortar.exe)
+
 把这个 EXE 直接发给其他人即可。对方无需安装程序或 OCR 组件，也不需要管理员权限。
 
 运行要求：
