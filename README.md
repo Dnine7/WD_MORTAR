@@ -12,7 +12,7 @@ dist\WardogsMortar.exe
 
 [从 GitHub 直接下载 WardogsMortar.exe](https://github.com/Dnine7/WD_MORTAR/raw/refs/heads/main/dist/WardogsMortar.exe)
 
-把这个 EXE 直接发给其他人即可。对方无需安装程序、MSIX、证书或 OCR 组件，也不需要管理员权限。
+把这个 EXE 直接发给其他人即可。对方无需安装程序或 OCR 组件，也不需要管理员权限。
 
 运行要求：
 
@@ -85,23 +85,13 @@ Set-Location .\cmd\wardogs-mortar
 wails dev
 ```
 
-## 可选：MSIX 安装包
-
-普通分享不需要 MSIX，直接发送 EXE 最简单。只有需要安装包体验时才运行：
-
-```powershell
-.\scripts\build-msix.ps1
-```
-
-MSIX 打包需要 Windows 10/11 SDK 中的 `makeappx.exe`，并且安装前必须使用与清单 Publisher 匹配的证书签名。用于本机测试时可运行 `scripts\create-dev-certificate.ps1` 创建开发证书；不要把生成的 PFX 文件或密码分享给其他人。
-
 ## 项目结构
 
 - `cmd/wardogs-mortar`：快捷键、托盘、状态流程和悬浮窗。
 - `cmd/wardogs-mortar/frontend`：Wails 桌面控制台前端。
-- `internal/ocr`：便携式 RapidOCR 和 Windows OCR 提供器。
+- `internal/ocr`：内置的便携式 RapidOCR 提供器。
 - `internal/coords`：容错坐标解析。
 - `internal/win32`：截图、窗口、热键和托盘所需的 Win32 封装。
-- `packaging`、`scripts`：构建 EXE 与可选 MSIX 的相关文件。
+- `scripts`：便携版 EXE 构建脚本。
 
 第一版只计算二维距离，不提供角度、装药量或弹道计算。RapidOCR 及模型的再分发说明见 `internal/ocr/THIRD_PARTY_NOTICES.md`。

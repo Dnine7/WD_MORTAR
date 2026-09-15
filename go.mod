@@ -2,11 +2,7 @@ module wardogs-mortar
 
 go 1.25.0
 
-require (
-	github.com/deploymenttheory/go-bindings-win32 v0.2.1
-	github.com/deploymenttheory/go-bindings-winrt v0.6.0
-	github.com/wailsapp/wails/v2 v2.15.0
-)
+require github.com/wailsapp/wails/v2 v2.15.0
 
 require (
 	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect

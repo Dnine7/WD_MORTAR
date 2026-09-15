@@ -33,6 +33,12 @@ const (
 //go:embed assets/rapidocr-v0.2.0-win-x64.zip
 var rapidOCRArchive []byte
 
+// OCRProvider recognizes text from a captured screen region.
+type OCRProvider interface {
+	Recognize(image *platform.Image) (string, error)
+	Close()
+}
+
 // portableProvider runs an embedded, offline RapidOCR helper. The helper and
 // its English/number models are unpacked to the user's local cache on first
 // launch, which keeps distribution to a single executable.
@@ -45,17 +51,7 @@ type portableProvider struct {
 }
 
 func NewProvider() (OCRProvider, error) {
-	provider, portableErr := newPortableProvider()
-	if portableErr == nil {
-		return provider, nil
-	}
-
-	// Keep the system provider as a fallback for an installed MSIX build.
-	system, systemErr := NewSystemProvider()
-	if systemErr == nil {
-		return system, nil
-	}
-	return nil, fmt.Errorf("portable OCR: %v; Windows OCR: %v", portableErr, systemErr)
+	return newPortableProvider()
 }
 
 func newPortableProvider() (*portableProvider, error) {

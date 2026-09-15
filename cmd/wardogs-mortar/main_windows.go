@@ -22,7 +22,7 @@ import (
 	"wardogs-mortar/internal/config"
 	"wardogs-mortar/internal/coords"
 	"wardogs-mortar/internal/model"
-	systemocr "wardogs-mortar/internal/ocr"
+	"wardogs-mortar/internal/ocr"
 	"wardogs-mortar/internal/win32"
 )
 
@@ -61,7 +61,7 @@ type application struct {
 	state   model.Snapshot
 	main    *win32.Window
 	overlay *win32.Window
-	ocr     systemocr.OCRProvider
+	ocr     ocr.OCRProvider
 	ctx     context.Context
 }
 
@@ -173,7 +173,7 @@ func newApplication() (*application, error) {
 		a.cfg.BoundProcess = win32.WindowProcessPath(foreground)
 		_ = config.Save(a.cfg)
 	}
-	provider, ocrErr := systemocr.NewProvider()
+	provider, ocrErr := ocr.NewProvider()
 	if ocrErr != nil {
 		a.state.Error = "离线 OCR 不可用：" + ocrErr.Error()
 	} else {
