@@ -1,0 +1,6 @@
+/dist/*
+!/dist/WardogsMortar.exe
+/.tools/
+/.idea/
+*.pfx
+*.cer

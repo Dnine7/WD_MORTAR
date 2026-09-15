@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wardogs 迫击炮控制台</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><path d="M9 35.5 24 7l15 28.5H9Z"/><path d="M19 32.5h10M21.5 27h5M24 16v7"/></svg>
+        </div>
+        <div>
+          <p class="eyebrow">WARDOGS FIELD TOOL</p>
+          <h1>迫击炮控制台</h1>
+        </div>
+      </div>
+      <div class="system-state">
+        <span id="ocrDot" class="state-dot"></span>
+        <span id="ocrState">正在启动离线 OCR</span>
+      </div>
+    </header>
+
+    <section class="hero-grid">
+      <article class="coordinate-card">
+        <div class="card-heading">
+          <span class="step-index">01</span>
+          <span>己方坐标</span>
+          <kbd>F8</kbd>
+        </div>
+        <div class="coordinate-value" id="currentCoordinate">—</div>
+        <div class="coordinate-meta" id="currentSource">等待记录</div>
+        <button class="button secondary" data-action="CaptureCurrent">识别己方坐标</button>
+      </article>
+
+      <article class="coordinate-card">
+        <div class="card-heading">
+          <span class="step-index">02</span>
+          <span>目标坐标</span>
+          <kbd>F9</kbd>
+        </div>
+        <div class="coordinate-value" id="targetCoordinate">—</div>
+        <div class="coordinate-meta" id="targetSource">等待记录</div>
+        <button class="button secondary" data-action="CaptureTarget">识别目标坐标</button>
+      </article>
+
+      <article class="distance-card">
+        <div class="radar" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="distance-content">
+          <div class="card-heading light">
+            <span class="step-index">03</span>
+            <span>直线距离</span>
+            <kbd>F10</kbd>
+          </div>
+          <div><span class="distance-value" id="distanceValue">—</span><span class="distance-unit">m</span></div>
+          <p>基于两点二维坐标实时计算</p>
+          <button class="button primary" data-action="CalculateDistance">重新计算</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="notice" class="notice" role="status">
+      <span class="notice-icon">●</span>
+      <span id="noticeText">正在初始化…</span>
+    </section>
+
+    <section class="control-grid">
+      <article class="panel game-panel">
+        <div class="panel-title">
+          <div><p class="eyebrow">GAME LINK</p><h2>游戏连接</h2></div>
+          <span id="bindBadge" class="badge">未绑定</span>
+        </div>
+        <p class="muted">自动查找已启动的 Wardogs 窗口。绑定后，即使控制台位于前台，也可以点击上方按钮识别坐标。</p>
+        <div id="boundProcess" class="process-path">尚未绑定游戏进程</div>
+        <button class="button outline" data-action="BindGame">查找并绑定 Wardogs</button>
+
+        <div class="divider"></div>
+        <label class="switch-row">
+          <span><strong>操作提示浮窗</strong><small>成功识别或计算后显示 3 秒，鼠标可穿透</small></span>
+          <input type="checkbox" id="overlayToggle"><i></i>
+        </label>
+      </article>
+
+      <article class="panel guide-panel">
+        <div class="panel-title"><div><p class="eyebrow">QUICK GUIDE</p><h2>快速使用</h2></div></div>
+        <ol class="steps">
+          <li><span>1</span><div><strong>准备画面</strong><small>在聊天输入完整坐标，或把鼠标移到地图目标点。</small></div></li>
+          <li><span>2</span><div><strong>依次记录</strong><small>使用 F8 / F9，或点击上方两个识别按钮。</small></div></li>
+          <li><span>3</span><div><strong>读取距离</strong><small>记录两点后自动计算；F10 可随时重算。</small></div></li>
+        </ol>
+      </article>
+    </section>
+
+    <details class="settings-panel">
+      <summary>
+        <span><span class="settings-icon">⌖</span><strong>OCR 与浮窗设置</strong><small>调整识别区域和操作提示位置</small></span>
+        <span class="chevron">⌄</span>
+      </summary>
+      <form id="settingsForm">
+        <div class="form-section">
+          <h3>参考分辨率</h3>
+          <div class="field-grid two">
+            <label>宽度<input type="number" min="1" name="referenceWidth" required></label>
+            <label>高度<input type="number" min="1" name="referenceHeight" required></label>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>浮窗位置 <small>0–100%</small></h3>
+          <div class="field-grid two">
+            <label>水平<input type="number" min="0" max="100" name="overlayXPercent" required></label>
+            <label>垂直<input type="number" min="0" max="100" name="overlayYPercent" required></label>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>聊天输入框 <small>x / y / 宽 / 高</small></h3>
+          <div class="field-grid four" data-rect="chatInput"></div>
+        </div>
+        <div class="form-section">
+          <h3>地图区域 <small>x / y / 宽 / 高</small></h3>
+          <div class="field-grid four" data-rect="mapRegion"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="button ghost" data-action="ResetSettings">恢复默认</button>
+          <button type="submit" class="button primary">保存设置</button>
+        </div>
+      </form>
+    </details>
+
+    <footer>关闭窗口后程序仍驻留系统托盘 · 托盘菜单可重新打开或退出</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
