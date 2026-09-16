@@ -101,31 +101,30 @@
         <span class="chevron">⌄</span>
       </summary>
       <form id="settingsForm">
+        <div class="form-section calibration-full">
+          <div class="section-heading-row">
+            <h3>屏幕校准 <small>直接在游戏画面上调整</small></h3>
+            <button type="button" class="button outline compact" id="startCalibration">在屏幕上调整</button>
+          </div>
+          <div class="calibration-empty">点击后控制台会暂时隐藏，游戏所在屏幕会出现实时遮罩层；拖动彩色方框调整位置，拖四角调整大小，按 Enter 保存，按 Esc 取消。</div>
+        </div>
         <div class="form-section">
-          <h3>参考分辨率</h3>
+          <h3>当前屏幕分辨率 <small>自动使用游戏所在显示器，不读取双屏总宽度</small></h3>
           <div class="field-grid two">
-            <label>宽度<input type="number" min="1" name="referenceWidth" required></label>
-            <label>高度<input type="number" min="1" name="referenceHeight" required></label>
+            <label>宽度<input type="number" min="1" name="referenceWidth" readonly required></label>
+            <label>高度<input type="number" min="1" name="referenceHeight" readonly required></label>
           </div>
         </div>
-        <div class="form-section">
-          <h3>浮窗位置 <small>0–100%</small></h3>
-          <div class="field-grid two">
-            <label>水平<input type="number" min="0" max="100" name="overlayXPercent" required></label>
-            <label>垂直<input type="number" min="0" max="100" name="overlayYPercent" required></label>
+        <div class="form-section calibration-values">
+          <h3>当前选区 <small>屏幕校准按 Enter 后自动写入配置</small></h3>
+          <div class="calibration-summary">
+            <div><span class="summary-label">聊天输入框</span><code id="chatSummary">—</code></div>
+            <div><span class="summary-label">小地图</span><code id="mapSummary">—</code></div>
+            <div><span class="summary-label">浮窗位置</span><code id="overlaySummary">—</code></div>
           </div>
-        </div>
-        <div class="form-section">
-          <h3>聊天输入框 <small>x / y / 宽 / 高</small></h3>
-          <div class="field-grid four" data-rect="chatInput"></div>
-        </div>
-        <div class="form-section">
-          <h3>地图区域 <small>x / y / 宽 / 高</small></h3>
-          <div class="field-grid four" data-rect="mapRegion"></div>
         </div>
         <div class="form-actions">
           <button type="button" class="button ghost" data-action="ResetSettings">恢复默认</button>
-          <button type="submit" class="button primary">保存设置</button>
         </div>
       </form>
     </details>

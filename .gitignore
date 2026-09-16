@@ -1,3 +1,6 @@
 /dist/
 /.tools/
 /.idea/
+/cmd/wardogs-mortar/build/bin/
+/cmd/wardogs-mortar/build/windows/
+/cmd/wardogs-mortar/frontend/wailsjs/

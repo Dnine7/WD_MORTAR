@@ -94,6 +94,16 @@ kbd { margin-left: auto; padding: 3px 7px; border: 1px solid rgba(255,255,255,.1
 .chevron { color: var(--muted); transition: transform .2s; }
 details[open] .chevron { transform: rotate(180deg); }
 #settingsForm { border-top: 1px solid var(--line); padding: 18px 20px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.calibration-full { grid-column: 1 / -1; min-width: 0; }
+.section-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.section-heading-row h3 { margin-bottom: 0; }
+.button.compact { min-height: 31px; padding: 0 11px; font-size: 10px; white-space: nowrap; }
+.calibration-empty { margin-top: 11px; padding: 18px 16px; border: 1px dashed rgba(73,216,232,.22); background: rgba(73,216,232,.035); color: var(--muted); font-size: 11px; line-height: 1.6; text-align: center; }
+.calibration-values { min-width: 0; }
+.calibration-summary { display: grid; gap: 7px; }
+.calibration-summary > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 9px; border: 1px solid var(--line); background: rgba(0,0,0,.15); }
+.summary-label { color: #738393; font-size: 10px; }
+.calibration-summary code { overflow: hidden; color: #cfe7ec; font: 10px Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
 .form-section h3 { margin: 0 0 10px; color: #b9c5cf; font-size: 11px; }
 .form-section h3 small { color: #647383; font-weight: 400; }
 .field-grid { display: grid; gap: 7px; }
@@ -101,6 +111,7 @@ details[open] .chevron { transform: rotate(180deg); }
 .field-grid.four { grid-template-columns: repeat(4, 1fr); }
 .field-grid label { color: #738393; font-size: 9px; text-transform: uppercase; }
 .field-grid input { width: 100%; margin-top: 5px; padding: 8px; border: 1px solid var(--line); border-radius: 3px; outline: none; background: #0d131c; color: #dce5ed; font: 11px Consolas, monospace; }
+.field-grid input[readonly] { color: #748391; cursor: default; }
 .field-grid input:focus { border-color: rgba(73,216,232,.45); }
 .form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; }
 footer { text-align: center; color: #596675; font-size: 9px; margin-top: 19px; letter-spacing: .05em; }
@@ -110,5 +121,5 @@ footer { text-align: center; color: #596675; font-size: 9px; margin-top: 19px; l
   .hero-grid { grid-template-columns: 1fr 1fr; }
   .distance-card { grid-column: 1 / -1; }
   #settingsForm { grid-template-columns: 1fr 1fr; }
-  .form-section:first-child { grid-column: 1 / -1; }
+  .calibration-full, .form-section:first-child { grid-column: 1 / -1; }
 }

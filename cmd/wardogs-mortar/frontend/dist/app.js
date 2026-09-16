@@ -1,19 +1,22 @@
 const $ = (selector) => document.querySelector(selector);
 let controller;
-let settingsInitialised = false;
 
-for (const container of document.querySelectorAll('[data-rect]')) {
-  const prefix = container.dataset.rect;
-  for (const [key, label] of [['x', 'X'], ['y', 'Y'], ['w', 'W'], ['h', 'H']]) {
-    container.insertAdjacentHTML('beforeend', `<label>${label}<input type="number" min="0" name="${prefix}.${key}" required></label>`);
-  }
-}
+const calibration = {
+  chatInput: {x: 0, y: 0, w: 1, h: 1},
+  mapRegion: {x: 0, y: 0, w: 1, h: 1},
+  overlayXPercent: 100,
+  overlayYPercent: 0
+};
 
 function formatCoordinate(value) {
   return value ? `X ${value.x.toFixed(2)} · Y ${value.y.toFixed(2)}` : '—';
 }
 
-function render(state, forceSettings = false) {
+function formatRect(rect) {
+  return `X ${rect.x} · Y ${rect.y} · W ${rect.w} · H ${rect.h}`;
+}
+
+function render(state) {
   $('#currentCoordinate').textContent = formatCoordinate(state.current);
   $('#currentSource').textContent = state.current ? `来源：${state.current.source}` : '等待记录';
   $('#targetCoordinate').textContent = formatCoordinate(state.target);
@@ -31,38 +34,20 @@ function render(state, forceSettings = false) {
   const message = state.error || state.status || '等待操作';
   $('#noticeText').textContent = message;
   $('#notice').className = `notice ${state.error ? 'error' : ''}`;
-
-  if (!settingsInitialised || forceSettings) {
-    setSettings(state.settings);
-    settingsInitialised = true;
-  }
+  setSettings(state.settings);
 }
 
 function setSettings(settings) {
   const form = $('#settingsForm');
   form.elements.referenceWidth.value = settings.referenceWidth;
   form.elements.referenceHeight.value = settings.referenceHeight;
-  form.elements.overlayXPercent.value = settings.overlayXPercent;
-  form.elements.overlayYPercent.value = settings.overlayYPercent;
-  for (const rect of ['chatInput', 'mapRegion']) {
-    for (const key of ['x', 'y', 'w', 'h']) {
-      form.elements[`${rect}.${key}`].value = settings[rect][key];
-    }
-  }
-}
-
-function getSettings() {
-  const form = $('#settingsForm');
-  const number = (name) => Number(form.elements[name].value);
-  const rect = (name) => ({x: number(`${name}.x`), y: number(`${name}.y`), w: number(`${name}.w`), h: number(`${name}.h`)});
-  return {
-    referenceWidth: number('referenceWidth'),
-    referenceHeight: number('referenceHeight'),
-    overlayXPercent: number('overlayXPercent'),
-    overlayYPercent: number('overlayYPercent'),
-    chatInput: rect('chatInput'),
-    mapRegion: rect('mapRegion')
-  };
+  calibration.chatInput = {...settings.chatInput};
+  calibration.mapRegion = {...settings.mapRegion};
+  calibration.overlayXPercent = settings.overlayXPercent;
+  calibration.overlayYPercent = settings.overlayYPercent;
+  $('#chatSummary').textContent = formatRect(calibration.chatInput);
+  $('#mapSummary').textContent = formatRect(calibration.mapRegion);
+  $('#overlaySummary').textContent = `水平 ${calibration.overlayXPercent}% · 垂直 ${calibration.overlayYPercent}%`;
 }
 
 async function runAction(button, action) {
@@ -72,7 +57,7 @@ async function runAction(button, action) {
   button.textContent = '处理中…';
   try {
     const result = await controller[action]();
-    if (action === 'ResetSettings' && result) render(result, true);
+    if (action === 'ResetSettings' && result) render(result);
     else render(await controller.GetState());
   } catch (error) {
     $('#noticeText').textContent = String(error);
@@ -80,6 +65,21 @@ async function runAction(button, action) {
   } finally {
     button.disabled = false;
     button.textContent = original;
+  }
+}
+
+async function startCalibration() {
+  const button = $('#startCalibration');
+  button.disabled = true;
+  button.textContent = '准备中…';
+  try {
+    await controller.StartCalibration();
+  } catch (error) {
+    $('#noticeText').textContent = String(error);
+    $('#notice').className = 'notice error';
+  } finally {
+    button.disabled = false;
+    button.textContent = '在屏幕上调整';
   }
 }
 
@@ -95,29 +95,16 @@ async function connect() {
     return;
   }
 
-  render(await controller.GetState(), true);
+  render(await controller.GetState());
   window.runtime?.EventsOn?.('state:update', render);
 
   document.querySelectorAll('[data-action]').forEach(button => {
     button.addEventListener('click', () => runAction(button, button.dataset.action));
   });
+  $('#startCalibration').addEventListener('click', startCalibration);
   $('#overlayToggle').addEventListener('change', async (event) => {
     try { await controller.SetOverlayVisible(event.target.checked); }
     catch { event.target.checked = !event.target.checked; }
-  });
-  $('#settingsForm').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const button = event.submitter;
-    button.disabled = true;
-    try {
-      await controller.SaveSettings(getSettings());
-      render(await controller.GetState(), true);
-    } catch (error) {
-      $('#noticeText').textContent = String(error);
-      $('#notice').className = 'notice error';
-    } finally {
-      button.disabled = false;
-    }
   });
 }
 

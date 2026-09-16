@@ -79,6 +79,9 @@ var (
 	procUnregisterHotKey     = windowUser32.NewProc("UnregisterHotKey")
 	procGetCursorPos         = windowUser32.NewProc("GetCursorPos")
 	procSetForegroundWindow  = windowUser32.NewProc("SetForegroundWindow")
+	procSetFocus             = windowUser32.NewProc("SetFocus")
+	procSetCapture           = windowUser32.NewProc("SetCapture")
+	procReleaseCapture       = windowUser32.NewProc("ReleaseCapture")
 	procCreatePopupMenu      = windowUser32.NewProc("CreatePopupMenu")
 	procAppendMenu           = windowUser32.NewProc("AppendMenuW")
 	procTrackPopupMenu       = windowUser32.NewProc("TrackPopupMenu")
@@ -126,6 +129,7 @@ const (
 	wmDestroy       = 0x0002
 	wmNcHitTest     = 0x0084
 	wmMouseActivate = 0x0021
+	htClient        = 1
 	htTransparent   = ^uintptr(0) // -1
 	maNoActivate    = 3
 
@@ -142,6 +146,7 @@ const (
 	nifTip     = 0x4
 
 	idiApplication  = 32512
+	appIconID       = 3 // Wails embeds the application icon as resource ID 3.
 	iconCallbackMsg = wmApp + 20
 
 	// Exported aliases used by the application package.
@@ -157,6 +162,7 @@ const (
 	WMPaint             = wmPaint
 	WMNCHitTest         = wmNcHitTest
 	WMMouseActivate     = wmMouseActivate
+	HTClient            = htClient
 	HTTransparent       = htTransparent
 	MANoActivate        = maNoActivate
 	WMHotkey            = 0x0312
@@ -199,6 +205,14 @@ func DefWindowProc(hwnd, message, wParam, lParam uintptr) uintptr {
 	return ret
 }
 
+func loadAppIcon(instance uintptr) uintptr {
+	icon, _, _ := procLoadIcon.Call(instance, appIconID)
+	if icon == 0 {
+		icon, _, _ = procLoadIcon.Call(0, idiApplication)
+	}
+	return icon
+}
+
 func NewWindow(className, title string, proc WindowProc, exStyle, style uint32, x, y, width, height int) (*Window, error) {
 	classPtr, err := syscall.UTF16PtrFromString(className)
 	if err != nil {
@@ -213,7 +227,7 @@ func NewWindow(className, title string, proc WindowProc, exStyle, style uint32, 
 	})
 	instance, _, _ := procGetModuleHandle.Call(0)
 	cursor, _, _ := procLoadCursor.Call(0, idiApplication)
-	icon, _, _ := procLoadIcon.Call(0, idiApplication)
+	icon := loadAppIcon(instance)
 	class := wndClassEx{
 		Size: uint32(unsafe.Sizeof(wndClassEx{})), WndProc: callback,
 		Instance: instance, Cursor: cursor, Icon: icon, SmallIcon: icon,
@@ -242,6 +256,28 @@ func (w *Window) Destroy() {
 
 func ShowWindow(hwnd uintptr, command int) {
 	procShowWindow.Call(hwnd, uintptr(command))
+}
+
+func ActivateWindow(hwnd uintptr) {
+	if hwnd != 0 {
+		procSetForegroundWindow.Call(hwnd)
+	}
+}
+
+func SetFocus(hwnd uintptr) {
+	if hwnd != 0 {
+		procSetFocus.Call(hwnd)
+	}
+}
+
+func SetCapture(hwnd uintptr) {
+	if hwnd != 0 {
+		procSetCapture.Call(hwnd)
+	}
+}
+
+func ReleaseCapture() {
+	procReleaseCapture.Call()
 }
 
 func UpdateWindow(hwnd uintptr) {
@@ -343,12 +379,26 @@ func ClientSize(hwnd uintptr) (int, int) {
 }
 
 func FillBlack(hdc uintptr, rect *TextRect) {
-	brush, _, _ := procCreateSolidBrush.Call(0x00000000)
+	FillRectColor(hdc, *rect, 0x00000000)
+}
+
+func FillRectColor(hdc uintptr, rect TextRect, color uint32) {
+	brush, _, _ := procCreateSolidBrush.Call(uintptr(color))
 	if brush == 0 {
 		return
 	}
 	defer procDeleteObjectGDI.Call(brush)
-	procFillRect.Call(hdc, uintptr(unsafe.Pointer(rect)), brush)
+	procFillRect.Call(hdc, uintptr(unsafe.Pointer(&rect)), brush)
+}
+
+func DrawRectBorder(hdc uintptr, rect TextRect, color uint32, thickness int) {
+	if thickness < 1 {
+		thickness = 1
+	}
+	FillRectColor(hdc, TextRect{Left: rect.Left, Top: rect.Top, Right: rect.Right, Bottom: rect.Top + int32(thickness)}, color)
+	FillRectColor(hdc, TextRect{Left: rect.Left, Top: rect.Bottom - int32(thickness), Right: rect.Right, Bottom: rect.Bottom}, color)
+	FillRectColor(hdc, TextRect{Left: rect.Left, Top: rect.Top, Right: rect.Left + int32(thickness), Bottom: rect.Bottom}, color)
+	FillRectColor(hdc, TextRect{Left: rect.Right - int32(thickness), Top: rect.Top, Right: rect.Right, Bottom: rect.Bottom}, color)
 }
 
 func DrawText(hdc uintptr, text string, rect TextRect, color uint32, height int) {
@@ -380,7 +430,8 @@ func AddTrayIcon(hwnd uintptr, id uint32, message uint32, tip string) error {
 		Flags:           nifMessage | nifIcon | nifTip,
 		CallbackMessage: message,
 	}
-	data.Icon, _, _ = procLoadIcon.Call(0, idiApplication)
+	instance, _, _ := procGetModuleHandle.Call(0)
+	data.Icon = loadAppIcon(instance)
 	copy(data.Tip[:], mustUTF16(tip))
 	ret, _, err := procShellNotifyIcon.Call(nimAdd, uintptr(unsafe.Pointer(&data)))
 	if ret == 0 {

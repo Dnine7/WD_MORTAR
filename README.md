@@ -1,6 +1,6 @@
 # Wardogs 迫击炮坐标距离计算器
 
-一个带桌面控制台和游戏内悬浮窗的 Windows 小工具。程序通过截图和内置离线 OCR 读取坐标，不联网、不读取游戏内存，也不注入游戏进程。
+一个带桌面控制台和游戏内悬浮窗的 Windows 小工具。程序读取游戏屏幕指定区域并使用内置离线 OCR 读取坐标，不联网、不读取游戏内存，也不注入游戏进程。
 
 ## 下载与分享
 
@@ -12,7 +12,6 @@ dist\WardogsMortar.exe
 
 [从 GitHub Releases 下载最新版 WardogsMortar.exe](https://github.com/Dnine7/WD_MORTAR/releases/latest/download/WardogsMortar.exe)
 
-把这个 EXE 直接发给其他人即可。对方无需安装程序或 OCR 组件，也不需要管理员权限。
 
 运行要求：
 
@@ -20,11 +19,7 @@ dist\WardogsMortar.exe
 - Microsoft Edge WebView2 Runtime（Windows 10/11 通常已自带）。
 - 首次启动可能需要几秒钟，程序会把内置 OCR 引擎释放到 `%LOCALAPPDATA%\WardogsMortar\ocr`，之后启动会更快。
 
-当前 EXE 没有商业代码签名证书，Windows SmartScreen 可能显示“Windows 已保护你的电脑”。确认文件来自可信来源后，可点击“更多信息”→“仍要运行”。分发前可用下面的命令生成校验值，并把结果一起发给对方：
-
-```powershell
-Get-FileHash .\dist\WardogsMortar.exe -Algorithm SHA256
-```
+当前 EXE 没有商业代码签名证书，Windows SmartScreen 可能显示“Windows 已保护你的电脑”。确认文件来自可信来源后，可点击“更多信息”→“仍要运行”。
 
 ## 使用方法
 
@@ -48,7 +43,9 @@ Get-FileHash .\dist\WardogsMortar.exe -Algorithm SHA256
 
 坐标解析支持大小写、空格、逗号、小数点、Y/X 颠倒，以及常见的 `O→0`、`I/l→1` OCR 误识别。
 
-默认区域针对 3440×1440 截图，程序会按游戏所在显示器的当前分辨率等比例缩放。如果界面比例或 HUD 位置不同，可在控制台底部展开“OCR 识别区域”并修改。四个区域数值依次是参考分辨率下的 `x/y/w/h`。同一设置面板也可调整浮窗的水平和垂直位置：`0` 表示左侧/顶部，`100` 表示右侧/底部。
+程序会在启动或绑定时自动使用游戏所在显示器的实际分辨率；双屏只取游戏所在的那一块屏幕，不使用两块屏幕的总宽度。如果界面比例或 HUD 位置不同，可在控制台底部展开“OCR 与浮窗设置”，点击“在屏幕上调整”，直接在游戏画面上的实时遮罩层中拖动聊天输入框、小地图和操作提示浮窗；聊天框和小地图四角可缩放。按 Enter 保存，按 Esc 取消。
+
+屏幕校准不会把游戏画面加载到控制台中；控制台会暂时隐藏，并在游戏所在显示器上显示实时半透明遮罩层。聊天输入框和小地图可以拖动或拖动四角缩放，操作提示浮窗可以拖动位置。
 
 用户配置保存在：
 
@@ -69,12 +66,14 @@ go test ./...
 .\scripts\build-exe.ps1
 ```
 
-输出文件为 `dist\WardogsMortar.exe`。内置 RapidOCR 引擎及英文/数字模型会一并打入 EXE。
+输出文件为 `dist\WardogsMortar.exe`。内置 RapidOCR 引擎及英文/数字模型会一并打入 EXE，`cmd\wardogs-mortar\build\appicon.png` 会作为程序图标嵌入 EXE。
 
-请优先使用构建脚本，不要直接运行普通的 `go build`。Wails 的正式桌面运行时需要 `production` 构建标签；如果必须手动构建，等价命令为：
+请优先使用构建脚本，不要直接运行普通的 `go build`；普通 Go 构建不会嵌入 Wails 的 Windows 图标和清单。构建脚本会先使用 Wails 生成资源，再把带图标的 EXE 复制到 `dist`。如果必须手动构建，等价命令为：
 
 ```powershell
-go build -tags production -trimpath -ldflags '-s -w -H=windowsgui' -o .\dist\WardogsMortar.exe .\cmd\wardogs-mortar
+Set-Location .\cmd\wardogs-mortar
+go run github.com/wailsapp/wails/v2/cmd/wails@v2.15.0 build -clean -s -m -skipbindings -platform windows/amd64 -o WardogsMortar.exe -tags production -trimpath -ldflags '-s -w -H=windowsgui'
+Copy-Item .\build\bin\WardogsMortar.exe ..\..\dist\WardogsMortar.exe -Force
 ```
 
 如需使用 Wails 开发模式调试控制台：
@@ -89,6 +88,7 @@ wails dev
 
 - `cmd/wardogs-mortar`：快捷键、托盘、状态流程和悬浮窗。
 - `cmd/wardogs-mortar/frontend`：Wails 桌面控制台前端。
+- `cmd/wardogs-mortar/build/appicon.png`：程序图标源文件；其余构建产物由 Wails 自动生成。
 - `internal/ocr`：内置的便携式 RapidOCR 提供器。
 - `internal/coords`：容错坐标解析。
 - `internal/win32`：截图、窗口、热键和托盘所需的 Win32 封装。

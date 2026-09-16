@@ -59,6 +59,10 @@ func (c *Controller) CalculateDistance() {
 	c.app.calculateDistance()
 }
 
+func (c *Controller) StartCalibration() error {
+	return c.app.startCalibration()
+}
+
 func (c *Controller) BindGame() error {
 	window := win32.FindWardogsWindow("")
 	if window == 0 {
@@ -130,6 +134,9 @@ func (c *Controller) ResetSettings() UIState {
 	c.app.cfg.OverlayYPercent = defaults.OverlayYPercent
 	value := c.app.cfg
 	c.app.mu.Unlock()
+	if window := win32.FindWardogsWindow(value.BoundProcess); window != 0 {
+		value = c.app.syncReferenceToMonitor(win32.MonitorRect(window))
+	}
 	if err := config.Save(value); err != nil {
 		c.app.setError("默认配置保存失败")
 	} else {

@@ -190,6 +190,19 @@ func WindowTitle(hwnd uintptr) string {
 	return syscall.UTF16ToString(buffer)
 }
 
+func FindWindowByTitle(title string) uintptr {
+	var found uintptr
+	callback := syscall.NewCallback(func(hwnd, _ uintptr) uintptr {
+		if WindowTitle(hwnd) == title {
+			found = hwnd
+			return 0
+		}
+		return 1
+	})
+	procEnumWindows.Call(callback, 0)
+	return found
+}
+
 func WindowProcessPath(hwnd uintptr) string {
 	if hwnd == 0 {
 		return ""
